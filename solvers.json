@@ -1,0 +1,6 @@
+[
+    {
+        "name": "mock_solver",
+        "command": "bash mock_solver.sh {input}"
+    }
+]

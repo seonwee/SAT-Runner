@@ -1,0 +1,22 @@
+# Build directories
+build/
+bin/
+
+# Output directories
+results/
+results_auto/
+
+# Temporary files and logs
+*.log
+*.err
+*.watcher
+index.csv
+
+# System and Editor files
+.DS_Store
+.vscode/
+.idea/
+
+# Binary/Script artifacts generated during testing
+mock_runsolver
+runsolver
