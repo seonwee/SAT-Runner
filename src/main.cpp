@@ -48,6 +48,7 @@ void run_job(Job job, AppConfig config, ResourceManager& resource_manager, int j
     fs::path log_path = out_dir / (base_name + ".log");
     fs::path err_path = out_dir / (base_name + ".err");
     fs::path watcher_path = out_dir / (base_name + ".watcher");
+    fs::path var_path = out_dir / (base_name + ".var"); // New: Key-value log file
 
     // 3. Command Construction
     // Template replacement
@@ -65,14 +66,34 @@ void run_job(Job job, AppConfig config, ResourceManager& resource_manager, int j
     replace_all(cmd, "{input}", job.input_path);
     replace_all(cmd, "{timeout}", std::to_string((int)config.timeout));
     
+    // Helper to escape double quotes for sh -c "..."
+    auto escape_quotes = [](std::string str) {
+        std::string result;
+        for (char c : str) {
+            if (c == '"') {
+                result += "\\\"";
+            } else if (c == '\\') {
+                 result += "\\\\";
+            } else {
+                result += c;
+            }
+        }
+        return result;
+    };
+    
     // Wrap with runsolver
-    // runsolver --timestamp -C {timeout} -M {mem} -w {watcher} -o {log} -e {err} -- {cmd}
+    // We use /bin/sh -c to split stdout and stderr because runsolver combines them with -o
+    // and does not support -e.
+    // New structure: 
+    // taskset -c X runsolver ... -- /bin/sh -c "cmd > log 2> err"
+    
+    std::string wrapped_cmd = "/bin/sh -c \"" + escape_quotes(cmd) + " 1> " + log_path.string() + " 2> " + err_path.string() + "\"";
+
     std::string runsolver_cmd = "runsolver --timestamp -C " + std::to_string((int)config.timeout) + 
-                                " -M " + std::to_string(config.mem_limit_mb) + 
+                                " --vsize-limit " + std::to_string(config.mem_limit_mb) + 
                                 " -w " + watcher_path.string() + 
-                                " -o " + log_path.string() +
-                                " -e " + err_path.string() + 
-                                " -- " + cmd;
+                                " -v " + var_path.string() + // New: Key-value log file
+                                " -- " + wrapped_cmd;
 
     // Wrap with taskset if pinned
     std::string final_cmd;

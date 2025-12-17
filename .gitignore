@@ -5,6 +5,8 @@ bin/
 # Output directories
 results/
 results_auto/
+results_real/
+results_real_vsize/
 
 # Temporary files and logs
 *.log

@@ -1,6 +1,10 @@
 [
     {
-        "name": "mock_solver",
-        "command": "bash mock_solver.sh {input}"
+        "name": "glucose",
+        "command": "./test_solver/glucose_static {input}"
+    },
+    {
+        "name": "kissat",
+        "command": "./test_solver/kissat {input}"
     }
 ]
